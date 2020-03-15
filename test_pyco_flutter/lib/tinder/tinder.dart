@@ -44,41 +44,41 @@ class ViewPage extends StatelessWidget {
               "4661 Auburn Ave",
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
             ),
-//            Row(
-//                crossAxisAlignment: CrossAxisAlignment.center,
-//                mainAxisAlignment: MainAxisAlignment.center,
-//                children: <Widget>[
-//                  IconButton(
-//                    icon: Icon(
-//                      Icons.email,
-//                      size: 40,
-//                    ),
-//                  ),
-//                  IconButton(
-//                    icon: Icon(
-//                      Icons.date_range,
-//                      size: 40,
-//                    ),
-//                  ),
-//                  IconButton(
-//                    icon: Icon(
-//                      Icons.map,
-//                      size: 40,
-//                    ),
-//                  ),
-//                  IconButton(
-//                    icon: Icon(
-//                      Icons.call,
-//                      size: 40,
-//                    ),
-//                  ),
-//                  IconButton(
-//                    icon: Icon(
-//                      Icons.enhanced_encryption,
-//                      size: 40,
-//                    ),
-//                  ),
-//                ])
+            Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  IconButton(
+                    icon: Icon(
+                      Icons.email,
+                      size: 40,
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      Icons.date_range,
+                      size: 40,
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      Icons.map,
+                      size: 40,
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      Icons.call,
+                      size: 40,
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      Icons.enhanced_encryption,
+                      size: 40,
+                    ),
+                  ),
+                ])
           ],
         ),
       ),

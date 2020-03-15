@@ -1,26 +1,27 @@
-import 'package:testpycoflutter/data/model/User_data.dart';
+
+import 'package:testpycoflutter/data/model/user_data.dart';
 import 'package:testpycoflutter/utils/dependency_injection.dart';
 
-abstract class FavoritePageContract {
-  void unFavorite(User user);
-  void showFavorires(List<User> users);
-  void showError(String message);
+abstract class FavoriteListViewContract {
+  void onLoadFavorireComplete(List<User> users);
+  void onLoadUserError(String message);
 }
 
-class FavoritePagePresenter {
-  FavoritePageContract _view;
+class FavoritePresenter {
+  FavoriteListViewContract  _view;
   UserRepository _repository;
 
-  FavoritePagePresenter(this._view) {
+  FavoritePresenter(this._view) {
     _repository = new Injector().userRepository;
   }
 
   void loadFavoritePeople() {
     assert(_view != null);
     _repository.getAllUser().then((users) {
-      _view.showFavorires(users);
+      _view.onLoadFavorireComplete(users);
     }).catchError((onError) {
-      _view.showError(onError.toString());
+      _view.onLoadUserError(onError.toString());
     });
   }
 }
+

@@ -1,9 +1,10 @@
-import 'package:testpycoflutter/data/model/User_data.dart';
+import 'package:testpycoflutter/data/model/user_data.dart';
 import 'package:testpycoflutter/utils/dependency_injection.dart';
 
 abstract class TinderPageContract {
   void showPeople(User user);
   void showFavoritePeple();
+  void showError(String message);
 }
 
 class TinderPageListContract {
@@ -17,6 +18,9 @@ class TinderPageListContract {
     assert(_view != null);
     _repository.fetchUser().then((user) {
       _view.showPeople(user);
+    }).catchError((onError) {
+      _view.showError(onError.toString());
     });
+
   }
 }

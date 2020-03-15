@@ -1,16 +1,14 @@
 import 'dart:async';
-
-import 'dart:async';
 import 'dart:convert';
 import 'dart:io' as io;
-import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';;
+import 'package:path_provider/path_provider.dart';
 
 import 'package:sqflite/sqflite.dart';
 import 'package:testpycoflutter/data/model/user_data.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper.internal();
+
   factory DatabaseHelper() => _instance;
   static Database _db;
 
@@ -25,15 +23,15 @@ class DatabaseHelper {
     return _db;
   }
 
-   void initDb() async {
-    io.Directory appDirectory = await getApplicationDocumentsDirectory();
-    String path = join(appDirectory.path, "appdata_v1.db");
-    var dbConnection =
-    await openDatabase(path, version: 1, onCreate: _onCreate);
-    return dbConnection;
+  Future<Database> initDb() async {
+    io.Directory directory = await getApplicationDocumentsDirectory();
+    String path = directory.path + "note.db";
+    var opendatabase =
+    await openDatabase(path, version: 1, onCreate: _createDb);
+    return opendatabase;
   }
 
-  void _onCreate(Database db, int version) async {
+  void _createDb(Database db, int newVersion) async {
     await db.execute('''CREATE TABLE users(
       id INTEGER PRIMARY KEY, 
       gender TEXT, 
@@ -56,14 +54,14 @@ class DatabaseHelper {
   }
 
   Future<User> addUser(User user) async {
-    var dbClient = await db;
-    user.id = await dbClient.insert("users", user.toMap());
+    var db = await this.db;
+    user.id = await db.insert("users", user.toMap());
     return user;
   }
 
-   Future<List<User>> getAllUser() async {
-   var dbClient = await db;
-  List<Map> maps = await dbClient.query('users');
+  Future<List<User>> getAllUser() async {
+    var db = await this.db;
+    List<Map> maps = await db.query('users');
     List<User> peoples = [];
     if (maps.length > 0) {
       for (int i = 0; i < maps.length; i++) {
@@ -75,38 +73,42 @@ class DatabaseHelper {
   }
 
   Future<int> deleteAllUser() async {
-    var dbClient = await db;
-    int result = await dbClient.delete("users");
+    var db = await this.db;
+    int result = await db.delete("users");
     return result;
   }
 
   Future<int> delete(int id) async {
-    var dbClient = await db;
-    return await dbClient.delete(
+    var db = await this.db;
+    return await db.delete(
       'users',
       where: '$id = ?',
+      whereArgs: [id]
     );
   }
 
   Future<int> deleteByEmail(String email) async {
-    var dbClient = await db;
-    return await dbClient.delete(
+    var db = await this.db;
+    return await db.delete(
       'users',
       where: 'email = ?',
+      whereArgs: [email]
     );
   }
 
   Future<int> update(User people) async {
-    var dbClient = await db;
-    return await dbClient.update(
+    var db = await this.db;
+    return await db.update(
       'users',
       people.toMap(),
       where: 'id = ?',
+      whereArgs: [people.id]
     );
   }
 
+
   Future close() async {
-    var dbClient = await db;
-    dbClient.close();
+    var db = await this.db;
+    db.close();
   }
 }

@@ -1,7 +1,10 @@
 import 'package:testpycoflutter/data/model/user_data.dart';
 import 'package:testpycoflutter/data/model/user_data_impl.dart';
 
-enum Flavor { MOCK, PROD }
+enum Flavor {
+  MOCK,
+  PROD
+}
 
 class Injector {
   static final Injector _singleton = Injector._internal();

@@ -1,9 +1,11 @@
 import 'package:testpycoflutter/data/model/location_data.dart';
+import 'package:testpycoflutter/data/model/personal_data.dart';
+import 'dart:convert';
 
 class User {
   int id;
   String gender;
-  String name;
+  Personal name;
   Location location;
   String email;
   String username;
@@ -24,7 +26,7 @@ class User {
 
   User.fromMap(Map<String, dynamic> map)
       : gender = map["gender"],
-        name = map["name"],
+        name = Personal.fromMap(map["name"]),
         location = Location.fromMap(map["location"]),
         email = map["email"],
         username = map["username"],
@@ -41,8 +43,8 @@ class User {
         picture = map["picture"];
   User.fromMapDb(Map<String, dynamic> map)
       : this.gender = map["gender"],
-        this.name = map["name"],
-        this.location = map["location"],
+        this.name = Personal.fromMap(json.decode(map["name"].toString())),
+        this.location =  Location.fromMap(json.decode(map["location"].toString())),
         this.email = map["email"],
         this.username = map["username"],
         this.password = map["password"],
@@ -60,7 +62,7 @@ class User {
   Map<String, dynamic> toMap() {
     var map = new Map<String, dynamic>();
     map["gender"] = gender;
-    map["name"] = name;
+    map["name"] = name.toJsonString();
     map["location"] = location.toJsonString();
     map["email"] = email;
     map["username"] = username;
@@ -80,7 +82,7 @@ class User {
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
       "gender": gender,
-      "name": name,
+      "name": name.toJson(),
       "location": location.toJson(),
       "email": email,
       "username": username,
@@ -99,7 +101,8 @@ class User {
 }
 
 
-}
+
+
 
 class UserDataException implements Exception {
   String _messages;
@@ -109,4 +112,10 @@ class UserDataException implements Exception {
   String toString() {
     return "Login Exception : $_messages";
   }
+}
+abstract class UserRepository {
+  Future<User> fetchUser();
+  Future<User> createUser(User user);
+  Future<List<User>> getAllUser();
+  Future<int> deleteUser(User user);
 }

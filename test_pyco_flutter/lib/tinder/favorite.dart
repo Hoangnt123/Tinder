@@ -3,26 +3,27 @@ import 'package:testpycoflutter/data/model/user_data.dart';
 import 'package:testpycoflutter/tinder/favorite_presenter.dart';
 import 'package:testpycoflutter/utils/hex_color.dart';
 
-class FavoritePage extends StatefulWidget {
+
+class FavoriteList extends StatefulWidget {
   @override
-  _FavoritePageState createState() => _FavoritePageState();
+  _FavoriteListState createState() => _FavoriteListState();
 }
 
-class _FavoritePageState extends State<FavoritePage>
-    implements FavoritePageContract {
+class _FavoriteListState extends State<FavoriteList>
+    implements FavoriteListViewContract {
   GlobalKey<ScaffoldState> _globalKey = new GlobalKey<ScaffoldState>();
-  FavoritePagePresenter _presenter;
-  List<User> peoples;
-  bool _isLoading;
+  FavoritePresenter _presenter;
+  List<User> people;
+  bool _isSearching;
 
-  _FavoritePageState() {
-    _presenter = new FavoritePagePresenter(this);
+  _FavoriteListState() {
+    _presenter = new FavoritePresenter(this);
   }
 
   @override
   void initState() {
     super.initState();
-    _isLoading = true;
+    _isSearching = true;
     _presenter.loadFavoritePeople();
   }
 
@@ -36,7 +37,7 @@ class _FavoritePageState extends State<FavoritePage>
   @override
   Widget build(BuildContext context) {
     Widget result;
-    if (_isLoading) {
+    if (_isSearching) {
       result = Center(
         child: Padding(
           padding: EdgeInsets.only(left: 16.0, right: 16.0),
@@ -44,7 +45,7 @@ class _FavoritePageState extends State<FavoritePage>
         ),
       );
     } else {
-      if (peoples.length <= 0) {
+      if (people.length <= 0) {
         result = MaterialApp(
           title: 'Tinder',
           home: Scaffold(
@@ -70,8 +71,10 @@ class _FavoritePageState extends State<FavoritePage>
               backgroundColor: HexColor("#FE3C72"),
             ),
             body: ListView.builder(
-                itemCount: peoples.length - 1,
+                itemCount: people.length - 1,
                 itemBuilder: (context, index) {
+
+
                   final widgetItem = Column(
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -80,20 +83,20 @@ class _FavoritePageState extends State<FavoritePage>
                         padding: EdgeInsets.all(5.0),
                         child: ListTile(
                             title: Text(
-                                "${peoples[index].name.title} ${peoples[index].name.first} ${peoples[index].name.last}"),
+                                "${people[index].name.title} ${people[index].name.first} ${people[index].name.last}"),
                             subtitle: Column(
                               mainAxisAlignment: MainAxisAlignment.start,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: <Widget>[
-                                Text("Phone : ${peoples[index].phone} "),
-                                Text("Cell : ${peoples[index].cell}"),
-                                Text("Email : ${peoples[index].email}")
+                                Text("Phone : ${people[index].phone} "),
+                                Text("Cell : ${people[index].cell}"),
+                                Text("Email : ${people[index].email}")
                               ],
                             ),
                             leading: new CircleAvatar(
                                 backgroundColor: Colors.blue,
                                 child: Text(
-                                    '${peoples[index].name.first.substring(0, 1)}'))),
+                                    '${people[index].name.first.substring(0, 1)}'))),
                       ),
                       Divider(
                         color: Colors.grey,
@@ -120,8 +123,24 @@ class _FavoritePageState extends State<FavoritePage>
   @override
   void showFavorires(List<User> users) {
     setState(() {
-      _isLoading = false;
-      peoples = users;
+      _isSearching = false;
+      people = users;
     });
   }
+  @override
+  void onLoadContactsError() {
+
+  }
+
+  @override
+  void onLoadFavorireComplete(List<User> users) {
+  }
+
+  @override
+  void onLoadUserError(String message) {
+  }
+
+
+
+
 }
