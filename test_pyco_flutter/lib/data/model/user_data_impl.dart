@@ -5,7 +5,7 @@ import '../exception_helper.dart';
 import 'user_data.dart';
 
 class RandomUserRepository implements UserRepository {
-  static const _RandomUserUrl = 'http://api.randomuser.me/?results=15';
+  static const _RandomUserUrl = 'https://randomuser.me/api/0.4/?randomapi';
 
   DatabaseHelper dbHelper;
 

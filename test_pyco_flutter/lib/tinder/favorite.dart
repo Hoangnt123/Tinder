@@ -113,9 +113,6 @@ class _FavoriteListState extends State<FavoriteList>
   }
 
   @override
-  void unFavorite(User user) {}
-
-  @override
   void showError(String error) {
     _showSnackBar(error);
   }

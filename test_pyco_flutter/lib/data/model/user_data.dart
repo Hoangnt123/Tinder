@@ -2,6 +2,8 @@ import 'package:testpycoflutter/data/model/location_data.dart';
 import 'package:testpycoflutter/data/model/personal_data.dart';
 import 'dart:convert';
 
+
+
 class User {
   int id;
   String gender;
@@ -59,6 +61,7 @@ class User {
         this.SSN = map["SSN"],
         this.picture = map["picture"];
 
+
   Map<String, dynamic> toMap() {
     var map = new Map<String, dynamic>();
     map["gender"] = gender;
@@ -101,7 +104,18 @@ class User {
 }
 
 
+class ApiResponse {
+  List<User> userList;
 
+  ApiResponse(this.userList);
+
+  factory ApiResponse.fromJson(Map<String, dynamic> json) {
+    final results = json['results'] as List;
+    List<User> userList = results.map((i) => User.fromJson(i)).toList();
+
+    return ApiResponse(userList);
+  }
+}
 
 
 class UserDataException implements Exception {

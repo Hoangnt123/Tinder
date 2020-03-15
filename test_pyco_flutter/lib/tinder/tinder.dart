@@ -1,127 +1,268 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:testpycoflutter/data/database_helper.dart';
+import 'package:testpycoflutter/data/model/user_data.dart';
+import 'package:testpycoflutter/tinder/favorite.dart';
+import 'package:swipe_stack/swipe_stack.dart';
 
-class ViewPage extends StatelessWidget {
-  Widget _buildCoverImage(Size screenSize) {
-    return Container(
-      height: screenSize.height / 2,
-      decoration: BoxDecoration(
-          image: DecorationImage(
-        image: AssetImage('lib/images/unnamed.jpg'),
-        fit: BoxFit.cover,
-      )),
-    );
+import 'dart:convert';
+class ViewPage extends StatefulWidget {
+  @override
+  _ViewPageState createState() =>
+  _ViewPageState();
+}
+class _ViewPageState extends State<ViewPage> {
+  bool _isLoading;
+  User _currentUser;
+  final GlobalKey<ScaffoldState> _scaffolkey = new GlobalKey<ScaffoldState>();
+  @override
+  void initState(){
+    super.initState();
+    _fetchUserFromNetwork();
+  }
+  _fetchUserFromNetwork() async{
+    setState(() {
+      _isLoading =true;
+    });
+    User user ;
+    bool isLoading;
+    try {
+      final response =await http.get('https://randomuser.me/api/0.4/?randomapi');
+      if (response.statusCode ==200){
+        ApiResponse apiResponse =
+            ApiResponse.fromJson(json.decode(response.body));
+        isLoading = false;
+        user = apiResponse.userList.first;
+      }else{
+        _showError("Fail to load user");
+        isLoading =false ;
+        user =null ;
+      }
+    }catch (exception){
+      _showError(exception.toString());
+
+      isLoading =false ;
+      user =null;
+    }
+    setState(() {
+      _isLoading = isLoading;
+      _currentUser =user;
+    });
+  }
+  void _showError(String error){
+    _scaffolkey.currentState.showSnackBar(SnackBar(
+      content: Text(error),
+    ));
   }
 
-  Widget _buildProfileImage() {
-    return Center(
-      child: Container(
-        height: 140,
-        width: 140,
-        decoration: BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage('lib/images/unnamed.jpg'),
-              fit: BoxFit.cover,
-            ),
-            borderRadius: BorderRadius.circular(80.0),
-            border: Border.all(color: Colors.white, width: 8)),
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      key: _scaffolkey,
+      appBar: AppBar(
+        title: Text("Home"),
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.star),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => FavoriteList()),
+              );
+            },
+          ),
+        ],
       ),
-    );
-  }
-
-  Widget _buildStatus() {
-    return Card(
-      elevation: 7,
-      margin: EdgeInsets.only(left: 20, top: 50, right: 20),
-      child: Container(
-        height: 250,
-        width: 400,
-        padding: EdgeInsets.only(top: 120, left: 5),
-        child: Column(
+      body: SafeArea(
+        child: Stack(
           children: <Widget>[
-            Text("My address is"),
-            Text(
-              "4661 Auburn Ave",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+            Container(
+              height: 200.0,
+              color: Colors.grey,
             ),
-            Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  IconButton(
-                    icon: Icon(
-                      Icons.email,
-                      size: 40,
+            Center(
+              child: _isLoading == true
+                  ? CircularProgressIndicator()
+                  : Container(
+                height: 500.0,
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: _currentUser == null
+                    ? SizedBox()
+                    : SwipeStack(
+                  children: [
+                    SwiperItem(
+                      builder: (SwiperPosition position,
+                          double progress) {
+                        return _UserCard(_currentUser);
+                      },
                     ),
-                  ),
-                  IconButton(
-                    icon: Icon(
-                      Icons.date_range,
-                      size: 40,
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(
-                      Icons.map,
-                      size: 40,
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(
-                      Icons.call,
-                      size: 40,
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(
-                      Icons.enhanced_encryption,
-                      size: 40,
-                    ),
-                  ),
-                ])
+                  ],
+                  visibleCount: 3,
+                  stackFrom: StackFrom.Top,
+                  translationInterval: 6,
+                  scaleInterval: 0.03,
+                  onSwipe: (int index, SwiperPosition position) {
+                    if (position != SwiperPosition.None) {
+                      _fetchUserFromNetwork();
+
+                    }
+                  },
+                ),
+              ),
+            ),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _bulidBackground(Size screenSize) {
-    return Container(
-      margin: new EdgeInsets.only(top: 190.0),
-      height: screenSize.height,
-      decoration: new BoxDecoration(
-        gradient: new LinearGradient(
-          colors: <Color>[new Color(0x00736AB7), new Color(0xFF736AB7)],
-          stops: [0.0, 0.9],
-          begin: const FractionalOffset(0.0, 0.0),
-          end: const FractionalOffset(0.0, 1.0),
-        ),
+
+
+class _UserCard extends StatefulWidget {
+  final User user;
+
+  _UserCard(this.user);
+
+  @override
+  _UserCardState createState() => _UserCardState();
+}
+
+class UserDetail {
+  final IconData iconData;
+  final String text;
+  final String value;
+
+  UserDetail({this.iconData, this.text, this.value});
+}
+
+class _UserCardState extends State<_UserCard> {
+  int _currentDetailIndex = 0;
+  List<UserDetail> userDetails;
+
+
+
+  @override
+  void initState() {
+    super.initState();
+
+    userDetails = [
+      UserDetail(
+        iconData: Icons.language,
+        text: "email",
+        value: widget.user.email,
       ),
-    );
+      UserDetail(
+        iconData: Icons.assignment,
+        text: "gender",
+        value: widget.user.gender,
+      ),
+      UserDetail(
+        iconData: Icons.location_on,
+        text: "location",
+      ),
+      UserDetail(
+        iconData: Icons.phone,
+        text: "phone",
+        value: widget.user.phone,
+      ),
+      UserDetail(
+        iconData: Icons.lock,
+        text: "password",
+        value: widget.user.password,
+      ),
+    ];
   }
 
   @override
   Widget build(BuildContext context) {
-    Size screenSize = MediaQuery.of(context).size;
-    return Scaffold(
-      body: Stack(
+    return Card(
+      elevation: 2.0,
+      child: Stack(
         children: <Widget>[
-          _buildCoverImage(screenSize),
-          _bulidBackground(screenSize),
-          SafeArea(
-              child: SingleChildScrollView(
-            child: Column(children: <Widget>[
-              SizedBox(
-                height: screenSize.height / 4.6,
-              ),
-              Stack(children: <Widget>[
-                _buildStatus(),
-                _buildProfileImage(),
-              ]),
-            ]),
-          ))
+          _buildBackground(),
+          _buildContent(),
         ],
       ),
     );
   }
-}
+
+  Widget _buildBackground() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        Container(
+          height: 150.0,
+          color: Colors.grey,
+        ),
+        Container(
+          height: 1.0,
+          color: Colors.grey,
+        ),
+        Expanded(
+          child: SizedBox(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildContent() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          SizedBox(height: 24.0),
+          Container(
+            width: 180.0,
+            height: 180.0,
+            padding: const EdgeInsets.all(6.0),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Colors.grey,
+                width: 1.5,
+              ),
+            ),
+            child: CircleAvatar(
+              radius: 90.0,
+              backgroundImage: NetworkImage(
+                  'https://randomuser.me/api/0.4/?randomapi'),
+              backgroundColor: Colors.grey,
+            ),
+          ),
+          SizedBox(height: 32.0),
+          Text(
+            "My ${userDetails[_currentDetailIndex].text} is",
+            style: TextStyle(
+              fontSize: 18.0,
+              color: Colors.grey,
+            ),
+          ),
+          SizedBox(height: 8.0),
+          Expanded(
+            child: Text(
+              userDetails[_currentDetailIndex].value,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 24.0,
+                color: Colors.black,
+              ),
+            ),
+          ),
+          SizedBox(height: 16.0)
+        ],
+      ),
+    );
+  }
+
+
+  }
+
+
+
+
+
