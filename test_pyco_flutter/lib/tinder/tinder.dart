@@ -1,75 +1,89 @@
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:testpycoflutter/data/database_helper.dart';
-import 'package:testpycoflutter/data/model/user_data.dart';
-import 'package:testpycoflutter/tinder/favorite.dart';
 import 'package:swipe_stack/swipe_stack.dart';
+import 'package:testpycoflutter/data/user_data.dart';
+import 'package:testpycoflutter/model/user.dart';
+import 'package:testpycoflutter/tinder/favorite.dart';
 
-import 'dart:convert';
 class ViewPage extends StatefulWidget {
   @override
-  _ViewPageState createState() =>
-  _ViewPageState();
+  _ViewPageState createState() => _ViewPageState();
 }
+
 class _ViewPageState extends State<ViewPage> {
   bool _isLoading;
   User _currentUser;
-  final GlobalKey<ScaffoldState> _scaffolkey = new GlobalKey<ScaffoldState>();
+
+  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
+
   @override
-  void initState(){
+  void initState() {
     super.initState();
+
     _fetchUserFromNetwork();
   }
-  _fetchUserFromNetwork() async{
+
+  _fetchUserFromNetwork() async {
     setState(() {
-      _isLoading =true;
+      _isLoading = true;
     });
-    User user ;
+
+    User user;
     bool isLoading;
     try {
-      final response =await http.get('https://randomuser.me/api/0.4/?randomapi');
-      if (response.statusCode ==200){
+      final response =
+          await http.get('https://randomuser.me/api/0.4/?randomapi');
+
+      if (response.statusCode == 200) {
         ApiResponse apiResponse =
             ApiResponse.fromJson(json.decode(response.body));
+
         isLoading = false;
         user = apiResponse.userList.first;
-      }else{
+      } else {
         _showError("Fail to load user");
-        isLoading =false ;
-        user =null ;
+
+        isLoading = false;
+        user = null;
       }
-    }catch (exception){
+    } catch (exception) {
       _showError(exception.toString());
 
-      isLoading =false ;
-      user =null;
+      isLoading = false;
+      user = null;
     }
+
     setState(() {
       _isLoading = isLoading;
-      _currentUser =user;
+      _currentUser = user;
     });
   }
-  void _showError(String error){
-    _scaffolkey.currentState.showSnackBar(SnackBar(
-      content: Text(error),
-    ));
-  }
 
+  void _showError(String error) {
+    _scaffoldKey.currentState.showSnackBar(
+      SnackBar(
+        content: Text(error),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: _scaffolkey,
+      key: _scaffoldKey,
       appBar: AppBar(
-        title: Text("Home"),
+        backgroundColor: Colors.pink,
+        title: Text("                         Tinder"),
         actions: <Widget>[
           IconButton(
             icon: Icon(Icons.star),
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => FavoriteList()),
+                MaterialPageRoute(builder: (context) => FavoriteView()),
               );
             },
           ),
@@ -86,31 +100,34 @@ class _ViewPageState extends State<ViewPage> {
               child: _isLoading == true
                   ? CircularProgressIndicator()
                   : Container(
-                height: 500.0,
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                child: _currentUser == null
-                    ? SizedBox()
-                    : SwipeStack(
-                  children: [
-                    SwiperItem(
-                      builder: (SwiperPosition position,
-                          double progress) {
-                        return _UserCard(_currentUser);
-                      },
+                      height: 500.0,
+                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                      child: _currentUser == null
+                          ? SizedBox()
+                          : SwipeStack(
+                              children: [
+                                SwiperItem(
+                                  builder: (SwiperPosition position,
+                                      double progress) {
+                                    return _UserCard(_currentUser);
+                                  },
+                                ),
+                              ],
+                              visibleCount: 3,
+                              stackFrom: StackFrom.Top,
+                              translationInterval: 6,
+                              scaleInterval: 0.03,
+                              onSwipe: (int index, SwiperPosition position) {
+                                if (position != SwiperPosition.None) {
+                                  _fetchUserFromNetwork();
+                                  if (position == SwiperPosition.Right) {
+                                    User user = _currentUser;
+                                    userData.insertFavoriteUser(user);
+                                  }
+                                }
+                              },
+                            ),
                     ),
-                  ],
-                  visibleCount: 3,
-                  stackFrom: StackFrom.Top,
-                  translationInterval: 6,
-                  scaleInterval: 0.03,
-                  onSwipe: (int index, SwiperPosition position) {
-                    if (position != SwiperPosition.None) {
-                      _fetchUserFromNetwork();
-
-                    }
-                  },
-                ),
-              ),
             ),
           ],
         ),
@@ -118,8 +135,6 @@ class _ViewPageState extends State<ViewPage> {
     );
   }
 }
-
-
 
 class _UserCard extends StatefulWidget {
   final User user;
@@ -142,15 +157,13 @@ class _UserCardState extends State<_UserCard> {
   int _currentDetailIndex = 0;
   List<UserDetail> userDetails;
 
-
-
   @override
   void initState() {
     super.initState();
 
     userDetails = [
       UserDetail(
-        iconData: Icons.language,
+        iconData: Icons.email,
         text: "email",
         value: widget.user.email,
       ),
@@ -162,6 +175,7 @@ class _UserCardState extends State<_UserCard> {
       UserDetail(
         iconData: Icons.location_on,
         text: "location",
+        value: widget.user.location,
       ),
       UserDetail(
         iconData: Icons.phone,
@@ -195,7 +209,7 @@ class _UserCardState extends State<_UserCard> {
       children: <Widget>[
         Container(
           height: 150.0,
-          color: Colors.grey,
+          color: Colors.white,
         ),
         Container(
           height: 1.0,
@@ -230,7 +244,8 @@ class _UserCardState extends State<_UserCard> {
             child: CircleAvatar(
               radius: 90.0,
               backgroundImage: NetworkImage(
-                  'https://randomuser.me/api/0.4/?randomapi'),
+                widget.user.avatarUrl,
+              ),
               backgroundColor: Colors.grey,
             ),
           ),
@@ -253,16 +268,102 @@ class _UserCardState extends State<_UserCard> {
               ),
             ),
           ),
+          SizedBox(height: 24.0),
+          _buildUserDetailIconList(),
           SizedBox(height: 16.0)
         ],
       ),
     );
   }
 
+  Widget _buildUserDetailIconList() {
+    List<Widget> detailIconWidgets = [];
 
+    for (int index = 0; index < userDetails.length; index++) {
+      UserDetail userDetail = userDetails[index];
+      detailIconWidgets.add(_UserDetailIcon(
+        iconData: userDetail.iconData,
+        isSelected: index == _currentDetailIndex,
+        onTap: () {
+          setState(() {
+            _currentDetailIndex = index;
+          });
+        },
+      ));
+    }
+
+    return Row(
+      children: detailIconWidgets,
+    );
+  }
+}
+
+class _UserDetailIcon extends StatelessWidget {
+  final IconData iconData;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  _UserDetailIcon({this.iconData, this.isSelected = false, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Flexible(
+      child: InkWell(
+        onTap: onTap,
+        child: Column(
+          children: <Widget>[
+            SizedBox(
+              width: double.infinity,
+              height: 12.0,
+              child: CustomPaint(
+                painter: _SelectIndicatorPainter(
+                  isSelected ? Colors.green : Colors.transparent,
+                ),
+              ),
+            ),
+            SizedBox(height: 16.0),
+            Icon(
+              iconData,
+              color: isSelected ? Colors.green : Colors.grey,
+            ),
+            SizedBox(height: 8.0),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SelectIndicatorPainter extends CustomPainter {
+  final Color color;
+  Paint _paint;
+
+  _SelectIndicatorPainter(this.color) {
+    _paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
   }
 
+  @override
+  void paint(Canvas canvas, Size size) {
+    final triangleSize = 5;
+    final bottomSize = size.height - 3;
 
+    Path path = new Path();
+    path.moveTo(0, bottomSize);
+    path.lineTo(size.width / 2.0 - triangleSize, bottomSize);
+    path.lineTo(size.width / 2.0, 0);
+    path.lineTo(size.width / 2.0 + triangleSize, bottomSize);
+    path.lineTo(size.width, bottomSize);
+    path.lineTo(size.width, size.height);
+    path.lineTo(0, size.height);
+    path.close();
 
+    canvas.drawPath(path, _paint);
+  }
 
-
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) {
+    return true;
+  }
+}
